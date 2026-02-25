@@ -15,11 +15,10 @@ class GdBrowser:
             level_id: int,
             download: bool = False) -> dict:
         return self.session.get(
-            f"{self.api}/level/{level_id}" if download f"{self.api}/level/{level_id}?download" else None).json()
+             f"{self.api}/level/{level_id}?download" if download else f"{self.api}/level/{level_id}").json()
 
     def get_user_profile(self, username: str) -> dict:
-        return self.session.get(
-            f"{self.api}/profile/{username}").json()
+        return self.session.get(f"{self.api}/profile/{username}").json()
 
     def search(
             self,
@@ -29,16 +28,17 @@ class GdBrowser:
             page: int = 0,
             gauntlet: int = None,
             type: str = "trending") -> dict:
-        url = f"{self.api}/search/{query}?count={count}"
-        if demon_filter:
-            url += f"&demonFilter={demon_filter}"
-        if page:
-            url += f"&page={page}"
-        if gauntlet:
-            url += f"&gauntlet={gauntlet}"
-        if type:
-            url += f"&type={type}"
-        return self.session.get(url).json()
+        params = {
+            "demonFilter": demon_filter,
+            "page": page,
+            "gauntlet": gauntlet,
+            "type": type
+        }
+        filtered_params = {
+            key: value for key, value in data.items() if value is not None
+        }
+        return self.session.get(
+            f"{self.api}/search/{query}?count={count}", params=filtered_params).json()
 
     def get_leaderboard(
             self,
@@ -93,12 +93,10 @@ class GdBrowser:
         return self.session.get(url).json()
 
     def check_song_verification(self, song_id: int) -> dict:
-        return self.session.get(
-            f"{self.api}/song/{song_id}").text
+        return self.session.get(f"{self.api}/song/{song_id}").text
 
     def analyze_level(self, level_id: int) -> dict:
-        return self.session.get(
-            f"{self.api}/analyze/{level_id}").json()
+        return self.session.get(f"{self.api}/analyze/{level_id}").json()
 
     def get_user_icon(
             self,
