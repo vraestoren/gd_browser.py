@@ -10,15 +10,24 @@ class GdBrowser:
             "Connection": "keep-alive"
         }
 
+    def _get(self, endpoint: str, params: dict = None) -> dict:
+        return self.session.get(
+            f"{self.api}{endpoint}", params=params).json()
+
+    def _filter(self, data: dict) -> dict:
+        return {k: v for k, v in data.items() if v is not None}
+
     def get_level(
-            self, 
+            self,
             level_id: int,
             download: bool = False) -> dict:
-        return self.session.get(
-             f"{self.api}/level/{level_id}?download" if download else f"{self.api}/level/{level_id}").json()
+        endpoint = f"/level/{level_id}"
+        if download:
+            endpoint += "?download"
+        return self._get(endpoint)
 
     def get_user_profile(self, username: str) -> dict:
-        return self.session.get(f"{self.api}/profile/{username}").json()
+        return self._get(f"/profile/{username}")
 
     def search(
             self,
@@ -27,81 +36,72 @@ class GdBrowser:
             demon_filter: int = None,
             page: int = 0,
             gauntlet: int = None,
-            type: str = "trending") -> dict:
-        params = {
+            search_type: str = "trending") -> dict:
+        params = self._filter({
             "demonFilter": demon_filter,
             "page": page,
             "gauntlet": gauntlet,
-            "type": type
-        }
-        filtered_params = {
-            key: value for key, value in data.items() if value is not None
-        }
-        return self.session.get(
-            f"{self.api}/search/{query}?count={count}", params=filtered_params).json()
+            "type": search_type
+        })
+        return self._get(f"/search/{query}?count={count}", params)
 
     def get_leaderboard(
             self,
-            count: int = 100, 
+            count: int = 100,
             is_creator: bool = False) -> dict:
-        url = f"{self.api}/leaderboard?count={count}"
+        endpoint = f"/leaderboard?count={count}"
         if is_creator:
-            url += "&creator"
-        return self.session.get(url).json()
+            endpoint += "&creator"
+        return self._get(endpoint)
 
     def get_map_packs(self) -> dict:
-        return self.session.get(f"{self.api}/mappacks").json()
+        return self._get("/mappacks")
 
     def get_gauntlets(self) -> dict:
-        return self.session.get(f"{self.api}/gauntlets").json()
+        return self._get("/gauntlets")
 
     def get_level_leaderboard(
             self,
             level_id: int,
             count: int = 100) -> dict:
-        return self.session.get(
-            f"{self.api}/leaderboardLevel/{level_id}?count={count}").json()
+        return self._get(f"/leaderboardLevel/{level_id}?count={count}")
 
     def get_user_posts(
             self,
             user_id: int,
             page: int = 0,
-            count: int = 10,
-            type: str = "profile") -> dict:
-        return self.session.get(
-            f"{self.api}/comments/{user_id}?page={page}&count={count}&type={type}").json()
+            count: int = 10) -> dict:
+        return self._get(
+            f"/comments/{user_id}?page={page}&count={count}&type=profile")
 
     def get_user_comments(
             self,
             user_id: int,
             page: int = 0,
-            count: int = 10,
-            type: str = "commentHistory") -> dict:
-        return self.session.get(
-            f"{self.api}/comments/{user_id}?page={page}&count={count}&type={type}").json()
+            count: int = 10) -> dict:
+        return self._get(
+            f"/comments/{user_id}?page={page}&count={count}&type=commentHistory")
 
     def get_level_comments(
             self,
             level_id: int,
             page: int = 0,
             is_top: bool = False,
-            count: int = 10,
-            type: str = "commentHistory") -> dict:
-        url = f"{self.api}/comments/{level_id}?page={page}&count={count}&type={type}"
+            count: int = 10) -> dict:
+        endpoint = f"/comments/{level_id}?page={page}&count={count}&type=level"
         if is_top:
-            url += "&top"
-        return self.session.get(url).json()
+            endpoint += "&top"
+        return self._get(endpoint)
 
-    def check_song_verification(self, song_id: int) -> dict:
+    def check_song_verification(self, song_id: int) -> str:
         return self.session.get(f"{self.api}/song/{song_id}").text
 
     def analyze_level(self, level_id: int) -> dict:
-        return self.session.get(f"{self.api}/analyze/{level_id}").json()
+        return self._get(f"/analyze/{level_id}")
 
     def get_user_icon(
             self,
             username: str,
             form: str = "cube",
             size: str = "auto") -> dict:
-        return self.session.get(
-            f"{self.api}/icon/{username}?form={form}&size={size}").json()
+        return self._get(f"/icon/{username}?form={form}&size={size}")
