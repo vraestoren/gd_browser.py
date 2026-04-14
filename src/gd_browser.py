@@ -15,7 +15,7 @@ class GdBrowser:
             f"{self.api}{endpoint}", params=params).json()
 
     def _filter(self, data: dict) -> dict:
-        return {key: value for keu, value in data.items() if value is not None}
+        return {key: value for key, value in data.items() if value is not None}
 
     def get_level(
             self,
