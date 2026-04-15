@@ -12,7 +12,7 @@ class GdBrowser:
 
     def _get(self, endpoint: str, params: dict = None) -> dict:
         return self.session.get(
-            f"{self.api}{endpoint}", params=params).json()
+            f"{self.api}{endpoint}", params=params or {}).json()
 
     def _filter(self, data: dict) -> dict:
         return {key: value for key, value in data.items() if value is not None}
@@ -38,21 +38,24 @@ class GdBrowser:
             gauntlet: int = None,
             search_type: str = "trending") -> dict:
         params = self._filter({
+            "count": count,
             "demonFilter": demon_filter,
             "page": page,
             "gauntlet": gauntlet,
             "type": search_type
         })
-        return self._get(f"/search/{query}?count={count}", params)
+        return self._get(f"/search/{query}", params)
 
     def get_leaderboard(
             self,
             count: int = 100,
             is_creator: bool = False) -> dict:
-        endpoint = f"/leaderboard?count={count}"
+        params = {
+            "count": count,
+        }
         if is_creator:
-            endpoint += "&creator"
-        return self._get(endpoint)
+            params["creator"] = ""
+        return self._get("/leaderboard", params)
 
     def get_map_packs(self) -> dict:
         return self._get("/mappacks")
@@ -64,23 +67,32 @@ class GdBrowser:
             self,
             level_id: int,
             count: int = 100) -> dict:
-        return self._get(f"/leaderboardLevel/{level_id}?count={count}")
+        params = {"count": count}
+        return self._get(f"/leaderboardLevel/{level_id}", params)
 
     def get_user_posts(
             self,
             user_id: int,
             page: int = 0,
             count: int = 10) -> dict:
-        return self._get(
-            f"/comments/{user_id}?page={page}&count={count}&type=profile")
+        params = {
+            "page": page,
+            "count": count,
+            "type": "profile"
+        }
+        return self._get(f"/comments/{user_id}", params)
 
     def get_user_comments(
             self,
             user_id: int,
             page: int = 0,
             count: int = 10) -> dict:
-        return self._get(
-            f"/comments/{user_id}?page={page}&count={count}&type=commentHistory")
+        params = {
+            "page": page,
+            "count": count,
+            "type": "commentHistory"
+        }
+        return self._get(f"/comments/{user_id}", params)
 
     def get_level_comments(
             self,
@@ -88,13 +100,16 @@ class GdBrowser:
             page: int = 0,
             is_top: bool = False,
             count: int = 10) -> dict:
-        endpoint = f"/comments/{level_id}?page={page}&count={count}&type=level"
-        if is_top:
-            endpoint += "&top"
-        return self._get(endpoint)
+        params = self._filter({
+            "page": page,
+            "count": count,
+            "type": "level",
+            "top": "" if is_top else None
+        })
+        return self._get(f"/comments/{level_id}", params)
 
     def check_song_verification(self, song_id: int) -> str:
-        return self.session.get(f"{self.api}/song/{song_id}").text
+        return self.session.get(f"/song/{song_id}")
 
     def analyze_level(self, level_id: int) -> dict:
         return self._get(f"/analyze/{level_id}")
@@ -104,4 +119,8 @@ class GdBrowser:
             username: str,
             form: str = "cube",
             size: str = "auto") -> dict:
-        return self._get(f"/icon/{username}?form={form}&size={size}")
+        params = {
+            "form": form,
+            "size": size
+        }
+        return self._get(f"/icon/{username}", params)
